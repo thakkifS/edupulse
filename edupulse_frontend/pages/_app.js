@@ -3,7 +3,7 @@ import { AuthProvider } from "../context/AuthContext";
 import Layout from "../components/Layout";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Loader from "../components/Loader";
+import FullScreenLoader from "../components/FullScreenLoader";
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function App({ Component, pageProps }) {
   return (
     <AuthProvider>
       <Layout>
-        {loading ? <Loader /> : <Component {...pageProps} />}
+        {loading ? <FullScreenLoader /> : <Component {...pageProps} />}
       </Layout>
     </AuthProvider>
   );

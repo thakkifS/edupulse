@@ -3,13 +3,14 @@ import axios from "axios";
 import { useRouter } from "next/router";
 import { AuthContext } from "../../context/AuthContext";
 import AdminCoursesPanel from "../../components/AdminCoursesPanel";
+import AdminLiveChatPanel from "../../components/AdminLiveChatPanel";
 
 export default function AdminDashboard() {
   const { user } = useContext(AuthContext);
   const router = useRouter();
 
   const authorized = useMemo(() => user?.role === "admin", [user]);
-  const [tab, setTab] = useState("books"); // books | users | courses
+  const [tab, setTab] = useState("books"); // books | users | courses | chat
   const [busy, setBusy] = useState(false);
 
   // Books
@@ -220,7 +221,9 @@ export default function AdminDashboard() {
         <div className="admin-top">
           <div>
             <h2 style={{ margin: 0 }}>Admin Dashboard</h2>
-            <p style={{ margin: "6px 0 0", opacity: 0.8 }}>Welcome, {user.Name}. Manage books, users, and Q&amp;A courses.</p>
+            <p style={{ margin: "6px 0 0", opacity: 0.8 }}>
+              Welcome, {user.Name}. Manage books, users, courses, and live student chat.
+            </p>
           </div>
           <div className="admin-tabs">
             <button className={`admin-tab ${tab === "books" ? "active" : ""}`} onClick={() => setTab("books")} type="button">
@@ -232,10 +235,15 @@ export default function AdminDashboard() {
             <button className={`admin-tab ${tab === "courses" ? "active" : ""}`} onClick={() => setTab("courses")} type="button">
               Courses &amp; MCQ
             </button>
+            <button className={`admin-tab ${tab === "chat" ? "active" : ""}`} onClick={() => setTab("chat")} type="button">
+              Live Chat
+            </button>
           </div>
         </div>
 
-        {tab === "courses" ? (
+        {tab === "chat" ? (
+          <AdminLiveChatPanel busy={busy} setBusy={setBusy} />
+        ) : tab === "courses" ? (
           <AdminCoursesPanel busy={busy} setBusy={setBusy} />
         ) : tab === "books" ? (
           <div className="admin-grid">

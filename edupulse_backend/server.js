@@ -12,6 +12,8 @@ const registerRoutes = require("./routes/registerRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const usersRoutes = require("./routes/usersRoutes");
 const courseRoutes = require("./routes/courseRoutes");
+const { router: chatRoutes, normalizeRoomKey } = require("./routes/chatRoutes");
+const ChatMessage = require("./models/ChatMessage");
 const Scheduler = require("./models/Scheduler");
 const { sendMail } = require("./utils/mailer");
 
@@ -65,6 +67,7 @@ app.use("/api/Register", registerRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.get('/', (req, res) => res.send("Hello World"));
 
@@ -83,6 +86,53 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", (data) => {
     io.emit("receive_message", data);
+  });
+
+  socket.on("join_chat", ({ roomKey, role }) => {
+    if (role === "admin") socket.join("admin_all");
+    if (roomKey && typeof roomKey === "string") {
+      const rk = normalizeRoomKey(roomKey);
+      if (rk) socket.join(rk);
+    }
+  });
+
+  socket.on("leave_chat", ({ roomKey }) => {
+    if (!roomKey || typeof roomKey !== "string") return;
+    socket.leave(normalizeRoomKey(roomKey));
+  });
+
+  socket.on("chat_send", async (payload, ack) => {
+    try {
+      const { roomKey, senderEmail, senderName, senderRole, text } = payload || {};
+      const rk = normalizeRoomKey(roomKey || senderEmail || "");
+      const email = String(senderEmail || "").trim().toLowerCase();
+      const body = String(text || "").trim();
+      if (!rk || !email || !body) {
+        const err = "roomKey, senderEmail and text are required";
+        if (typeof ack === "function") ack({ ok: false, message: err });
+        return;
+      }
+      const role = senderRole === "admin" ? "admin" : senderRole === "guest" ? "guest" : "student";
+      if (role !== "admin" && normalizeRoomKey(email) !== rk) {
+        const err = "You can only post to your own chat room";
+        if (typeof ack === "function") ack({ ok: false, message: err });
+        return;
+      }
+      const doc = await ChatMessage.create({
+        roomKey: rk,
+        senderEmail: email,
+        senderName: String(senderName || "").trim().slice(0, 120),
+        senderRole: role,
+        text: body.slice(0, 2000),
+      });
+      const plain = doc.toObject();
+      io.to(rk).emit("chat_message", plain);
+      io.to("admin_all").emit("admin_inbox", { roomKey: rk, message: plain });
+      if (typeof ack === "function") ack({ ok: true, data: plain });
+    } catch (e) {
+      console.error("chat_send", e.message);
+      if (typeof ack === "function") ack({ ok: false, message: e.message });
+    }
   });
 
   socket.on("disconnect", () => {

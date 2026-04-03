@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import HeaderDiffer from "../../components/HeaderDiffer";
+import FullScreenLoader from "../../components/FullScreenLoader";
+import LiveDateTimeClock from "../../components/LiveDateTimeClock";
+import SchedulerReminderPanel from "../../components/SchedulerReminderPanel";
 
 const API = "http://localhost:3001/api/scheduler";
 
@@ -171,6 +174,7 @@ function downloadPDF({ studentName, year, semester, startDate, schedule }) {
 export default function SchedulerPage() {
   const [step, setStep] = useState("form"); // form | result
   const [busy, setBusy] = useState(false);
+  const [transitionBusy, setTransitionBusy] = useState(false);
   const [schedule, setSchedule] = useState(null);
   const [scheduleId, setScheduleId] = useState(null);
 
@@ -323,11 +327,26 @@ export default function SchedulerPage() {
     setEvents([]);
   };
 
+  const withStepLoader = (fn) => {
+    setTransitionBusy(true);
+    window.setTimeout(() => {
+      fn();
+      setTransitionBusy(false);
+    }, 700);
+  };
+
   return (
     <>
+      {(busy || transitionBusy) && <FullScreenLoader />}
       <HeaderDiffer />
       <div className="survey-bg">
         <div className="survey-shell">
+          <div className="scheduler-toolbar">
+            <LiveDateTimeClock />
+            {step === "result" && schedule && (
+              <SchedulerReminderPanel schedule={schedule} events={events} surveyStartDate={survey.startDate} />
+            )}
+          </div>
           <div className="survey-hero">
             <div>
               <h1 className="survey-title">Smart Weekly Scheduler</h1>
@@ -346,10 +365,14 @@ export default function SchedulerPage() {
                 >
                   Download PDF Again
                 </button>
-                <button className="secondary-btn" type="button" onClick={() => setStep("form")}>
+                <button
+                  className="secondary-btn"
+                  type="button"
+                  onClick={() => withStepLoader(() => setStep("form"))}
+                >
                   Re-edit
                 </button>
-                <button className="primary-btn" type="button" onClick={resetAll}>
+                <button className="primary-btn" type="button" onClick={() => withStepLoader(resetAll)}>
                   New Schedule
                 </button>
               </div>
@@ -673,13 +696,13 @@ export default function SchedulerPage() {
                   </p>
                 </div>
 
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <div className="scheduler-table-wrap">
+                  <table className="scheduler-table">
                     <thead>
                       <tr>
-                        <th style={{ textAlign: "left", padding: 10, borderBottom: "1px solid #ddd" }}>Day</th>
+                        <th className="scheduler-day-col">Day</th>
                         {TIMES.map((t) => (
-                          <th key={t} style={{ padding: 10, borderBottom: "1px solid #ddd", whiteSpace: "nowrap" }}>
+                          <th key={t} className="scheduler-time-col">
                             {t}
                           </th>
                         ))}
@@ -688,30 +711,23 @@ export default function SchedulerPage() {
                     <tbody>
                       {schedule?.days.map((d) => (
                         <tr key={d.date}>
-                          <td style={{ padding: 10, borderBottom: "1px solid #eee", fontWeight: 900 }}>
-                            {d.name} <span style={{ opacity: 0.7 }}>({d.date})</span>
+                          <td className="scheduler-day-col">
+                            {d.name} <span className="scheduler-date-muted">({d.date})</span>
                           </td>
                           {TIMES.map((t) => {
                             const v = schedule.grid[d.date][t] || "";
                             const isFixed = ["Breakfast", "Lunch", "Tea Time", "Dinner", "Rest", "Sleep"].includes(v);
-                            const isEvent = String(v).startsWith("Exam") || String(v).startsWith("Viva") || String(v).startsWith("Presentation") || String(v).startsWith("Lecture") || String(v).startsWith("SpotTest");
+                            const isEvent =
+                              String(v).startsWith("Exam") ||
+                              String(v).startsWith("Viva") ||
+                              String(v).startsWith("Presentation") ||
+                              String(v).startsWith("Lecture") ||
+                              String(v).startsWith("SpotTest") ||
+                              String(v).startsWith("Spot");
                             return (
                               <td
                                 key={t}
-                                style={{
-                                  padding: 10,
-                                  borderBottom: "1px solid #eee",
-                                  borderLeft: "1px solid #f1f1f1",
-                                  minWidth: 160,
-                                  background: isFixed
-                                    ? "rgba(255, 207, 0, 0.14)"
-                                    : isEvent
-                                    ? "rgba(92, 30, 30, 0.10)"
-                                    : v
-                                    ? "rgba(32, 60, 86, 0.08)"
-                                    : "transparent",
-                                  fontWeight: isFixed ? 900 : 700,
-                                }}
+                                className={`scheduler-cell ${isFixed ? "is-fixed" : ""} ${isEvent ? "is-event" : ""} ${v && !isFixed && !isEvent ? "is-study" : ""}`}
                               >
                                 {v}
                               </td>
