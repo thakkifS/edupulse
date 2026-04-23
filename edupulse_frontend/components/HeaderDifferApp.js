@@ -77,7 +77,7 @@ export default function HeaderDifferApp() {
           )}
 
           <div className="profile-name-diff">
-            {user ? String(user.Name).split(" ")[0] : "Sign In"}
+            {user ? String(user.Name || "").split(" ")[0] : "Sign In"}
           </div>
 
           {showMenu && user && (

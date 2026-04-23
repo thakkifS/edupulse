@@ -84,7 +84,7 @@ export default function SurveyPage() {
 
   const validate = () => {
     if (!basic.fullName.trim()) return "Full Name is required";
-    if (!/^[A-Za-z ]+$/.test(basic.fullName.trim())) return "Full Name must contain letters only";
+    if (!basic.fullName || !/^[A-Za-z ]+$/.test(basic.fullName.trim())) return "Full Name must contain letters only";
     if (!basic.level) return "Please select your current level of study";
 
     for (const item of INTEREST_ITEMS) {

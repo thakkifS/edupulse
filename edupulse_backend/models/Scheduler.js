@@ -1,4 +1,3 @@
-// models/Scheduler.js
 const mongoose = require("mongoose");
 
 const LectureSchema = new mongoose.Schema({
@@ -9,12 +8,15 @@ const LectureSchema = new mongoose.Schema({
 });
 
 const EventSchema = new mongoose.Schema({
-  eventType: { type: String, enum: ["Exam","Viva","Presentation","Lecture","SpotTest","Other"] },
+  eventType: {
+    type: String,
+    enum: ["Exam", "Viva", "Presentation", "Lecture", "SpotTest", "Other"],
+  },
   moduleName: String,
   date: Date,
   time: String,
   description: String,
-  logicalOrTheory: { type: String, enum: ["Logical","Theory"], default: "Theory" },
+  logicalOrTheory: { type: String, enum: ["Logical", "Theory"], default: "Theory" },
 });
 
 const SchedulerSchema = new mongoose.Schema({

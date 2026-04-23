@@ -1,18 +1,29 @@
-const express = require("express");
 const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 
-const router = express.Router();
+// Generate JWT token
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET || "your-secret-key", {
+    expiresIn: "30d",
+  });
+};
 
-router.post("/", async (req, res) => {
+// POST /api/Register
+exports.register = async (req, res, next) => {
   try {
     const { Name, studentID, PhoneNumber, Email, Password } = req.body;
+
     if (!Name || !studentID || !PhoneNumber || !Email || !Password) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     const existing = await User.findOne({
-      $or: [{ Email: Email.toLowerCase().trim() }, { studentID: studentID.toUpperCase().trim() }],
+      $or: [
+        { Email: Email.toLowerCase().trim() },
+        { studentID: studentID.toUpperCase().trim() },
+      ],
     });
+
     if (existing) {
       return res.status(400).json({ success: false, message: "Email or Student ID already exists" });
     }
@@ -32,13 +43,15 @@ router.post("/", async (req, res) => {
       data: { Name: user.Name, Email: user.Email, studentID: user.studentID, role: user.role },
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    next(err);
   }
-});
+};
 
-router.post("/login", async (req, res) => {
+// POST /api/Register/login
+exports.login = async (req, res, next) => {
   try {
     const { Email, Password } = req.body;
+
     if (!Email || !Password) {
       return res.status(400).json({ success: false, message: "Email and password are required" });
     }
@@ -48,13 +61,14 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
+    const token = generateToken(user._id);
+
     res.json({
       success: true,
+      token: token,
       data: { Name: user.Name, Email: user.Email, studentID: user.studentID, role: user.role },
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    next(err);
   }
-});
-
-module.exports = router;
+};

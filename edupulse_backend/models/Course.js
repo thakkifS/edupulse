@@ -19,7 +19,13 @@ const questionSchema = new mongoose.Schema(
 
 const courseSchema = new mongoose.Schema(
   {
-    courseCode: { type: String, required: true, unique: true, trim: true, uppercase: true },
+    courseCode: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      uppercase: true,
+    },
     name: { type: String, required: true, trim: true },
     imageUrl: { type: String, default: "" },
     description: { type: String, default: "" },

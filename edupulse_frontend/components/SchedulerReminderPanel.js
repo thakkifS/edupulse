@@ -3,9 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaBell, FaBellSlash, FaCheckCircle } from "react-icons/fa";
 
-const pad2 = (n) => String(n).padStart(2, "0");
-const toISODate = (d) =>
-  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const pad2 = (n) => String(n || 0).padStart(2, "0");
+const toISODate = (d) => {
+  if (!d || !(d instanceof Date) || isNaN(d.getTime())) {
+    console.error('Invalid date passed to toISODate:', d);
+    return '';
+  }
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
 
 function inWeekRange(startDateStr, todayISO) {
   if (!startDateStr) return false;

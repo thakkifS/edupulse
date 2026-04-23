@@ -33,6 +33,10 @@ export default function AdminLiveChatPanel({ busy, setBusy }) {
   }, []);
 
   const loadThread = async (roomKey) => {
+    if (!roomKey) {
+      console.error('Room key is undefined for loadThread');
+      return;
+    }
     setBusy(true);
     try {
       const res = await axios.get(`${API}/api/chat/history`, { params: { roomKey } });
@@ -82,7 +86,7 @@ export default function AdminLiveChatPanel({ busy, setBusy }) {
     const s = socketRef.current;
     if (!s?.connected) return;
     const prev = prevJoinedRef.current;
-    if (prev && prev !== activeRoom) s.emit("leave_chat", { roomKey: prev });
+    if (prev && prev !== activeRoom && prev) s.emit("leave_chat", { roomKey: prev });
     prevJoinedRef.current = activeRoom || null;
     if (activeRoom) s.emit("join_chat", { roomKey: activeRoom, role: "admin" });
   }, [activeRoom]);

@@ -18,7 +18,7 @@ export default function LiveDateTimeClock() {
     return () => window.clearInterval(id);
   }, []);
 
-  const dateStr = mounted
+  const dateStr = mounted && !isNaN(now.getTime())
     ? now.toLocaleDateString(undefined, {
         weekday: "long",
         year: "numeric",
@@ -27,7 +27,7 @@ export default function LiveDateTimeClock() {
       })
     : "\u2014";
 
-  const timeStr = mounted
+  const timeStr = mounted && !isNaN(now.getTime())
     ? now.toLocaleTimeString(undefined, {
         hour: "2-digit",
         minute: "2-digit",

@@ -31,16 +31,36 @@ const TIMES = [
   "22:00",
 ];
 
-const toDateOnly = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const toDateOnly = (d) => {
+  if (!d || !(d instanceof Date) || isNaN(d.getTime())) {
+    console.error('Invalid date passed to toDateOnly:', d);
+    return new Date();
+  }
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
 const addDays = (d, n) => {
+  if (!d || !(d instanceof Date) || isNaN(d.getTime())) {
+    console.error('Invalid date passed to addDays:', d);
+    return new Date();
+  }
   const x = new Date(d);
   x.setDate(x.getDate() + n);
   return x;
 };
-const pad2 = (n) => String(n).padStart(2, "0");
-const toISODate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const pad2 = (n) => String(n || 0).padStart(2, "0");
+const toISODate = (d) => {
+  if (!d || !(d instanceof Date) || isNaN(d.getTime())) {
+    console.error('Invalid date passed to toISODate:', d);
+    return '';
+  }
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
 
 function clamp7Date(startDate, dateStr) {
+  if (!startDate) {
+    console.error('startDate is undefined in clamp7Date');
+    return { ok: false, message: "Start date is required" };
+  }
   const start = toDateOnly(new Date(startDate));
   const end = toDateOnly(addDays(start, 6));
   const d = toDateOnly(new Date(dateStr));
@@ -50,6 +70,17 @@ function clamp7Date(startDate, dateStr) {
 }
 
 function buildEmptyGrid(startDate) {
+  if (!startDate) {
+    console.error('startDate is undefined in buildEmptyGrid');
+    const start = new Date();
+    const days = DAY_NAMES.map((name, i) => ({ name, date: toISODate(addDays(start, i)) }));
+    const grid = {};
+    for (const d of days) {
+      grid[d.date] = {};
+      for (const t of TIMES) grid[d.date][t] = "";
+    }
+    return { days, grid };
+  }
   const start = toDateOnly(new Date(startDate));
   const days = DAY_NAMES.map((name, i) => ({ name, date: toISODate(addDays(start, i)) }));
   const grid = {};
@@ -77,7 +108,8 @@ function applyFixedBlocks(grid, days) {
 }
 
 function timeBucket(hhmm) {
-  const hh = Number(String(hhmm || "").split(":")[0] || 0);
+  if (!hhmm) return "morning";
+  const hh = Number(String(hhmm).split(":")[0] || 0);
   if (hh >= 20 || hh < 7) return "night";
   if (hh >= 7 && hh < 12) return "morning";
   if (hh >= 12 && hh < 17) return "afternoon";
@@ -100,7 +132,7 @@ function generateSchedule({ startDate, lectures, events }) {
     if (!grid[d]) continue;
     const t = (ev.startTime || ev.time || "").slice(0, 5) || "09:00";
     // bucket to nearest hour in TIMES
-    const bucket = TIMES.includes(t) ? t : `${pad2(Number(t.split(":")[0] || 9))}:00`;
+    const bucket = TIMES.includes(t) ? t : `${pad2(Number((t || "09:00").split(":")[0] || 9))}:00`;
     const label = `${ev.eventType}${ev.moduleName ? `: ${ev.moduleName}` : ""}`;
     if (grid[d][bucket] === "") grid[d][bucket] = label;
   }
@@ -168,7 +200,8 @@ function downloadPDF({ studentName, year, semester, startDate, schedule }) {
     alternateRowStyles: { fillColor: [245, 245, 245] },
   });
 
-  doc.save(`EduPulse_Weekly_Schedule_${toISODate(new Date(startDate))}.pdf`);
+  const dateStr = startDate ? toISODate(new Date(startDate)) : toISODate(new Date());
+  doc.save(`EduPulse_Weekly_Schedule_${dateStr}.pdf`);
 }
 
 export default function SchedulerPage() {
@@ -228,7 +261,7 @@ export default function SchedulerPage() {
     if (!survey.email.trim() || !survey.email.includes("@")) return "Valid Email is required (for reminders)";
     if (!survey.email.trim().toLowerCase().endsWith("@gmail.com")) return "Email must be a @gmail.com address";
     if (!survey.studentName.trim()) return "Name is required";
-    if (!/^[A-Za-z ]+$/.test(survey.studentName.trim())) return "Name must contain letters only";
+    if (!survey.studentName || !/^[A-Za-z ]+$/.test(survey.studentName.trim())) return "Name must contain letters only";
     if (!/^[1-4]$/.test(String(survey.year))) return "Year must be between 1 and 4";
     if (!survey.startDate) return "Start Date is required";
 

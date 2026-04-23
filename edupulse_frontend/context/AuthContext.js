@@ -3,6 +3,7 @@ import { createContext, useEffect, useMemo, useState } from "react";
 export const AuthContext = createContext(null);
 
 const USER_KEY = "edupulse_user";
+const TOKEN_KEY = "token";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -11,7 +12,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(USER_KEY);
-      if (saved) {
+      const token = window.localStorage.getItem(TOKEN_KEY);
+      if (saved && token) {
         setUser(JSON.parse(saved));
       }
     } catch (error) {
@@ -21,14 +23,18 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = (nextUser) => {
+  const login = (nextUser, token) => {
     setUser(nextUser);
     window.localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    if (token) {
+      window.localStorage.setItem(TOKEN_KEY, token);
+    }
   };
 
   const logout = () => {
     setUser(null);
     window.localStorage.removeItem(USER_KEY);
+    window.localStorage.removeItem(TOKEN_KEY);
   };
 
   const updateUser = (partial) => {

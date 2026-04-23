@@ -53,7 +53,7 @@ export default function Header() {
           )}
 
           <div className="profile-name">
-            {user ? String(user.Name).split(" ")[0] : "Sign In"}
+            {user ? String(user.Name || "").split(" ")[0] : "Sign In"}
           </div>
 
           {showMenu && user && (

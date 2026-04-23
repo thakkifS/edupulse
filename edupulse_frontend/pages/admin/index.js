@@ -75,11 +75,11 @@ export default function AdminDashboard() {
 
   const validateBook = () => {
     const { BookID, BookName, Author, Description } = bookForm;
-    if (!BookID.trim()) return "BookID is required";
-    if (!BookName.trim()) return "Book name is required";
-    if (!Author.trim()) return "Author is required";
-    if (!Description.trim()) return "Description is required";
-    if (!/^[A-Za-z]{2}$/.test(BookID.trim().substring(0, 2))) return "BookID must start with 2 letters (e.g. EK)";
+    if (!BookID?.trim()) return "BookID is required";
+    if (!BookName?.trim()) return "Book name is required";
+    if (!Author?.trim()) return "Author is required";
+    if (!Description?.trim()) return "Description is required";
+    if (!BookID || !/^[A-Za-z]{2}$/.test(BookID.trim().substring(0, 2))) return "BookID must start with 2 letters (e.g. EK)";
     return null;
   };
 
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
   const validateUser = () => {
     const { Name, studentID, PhoneNumber, Email, Password } = userForm;
     if (!Name.trim()) return "Name is required";
-    if (!/^[A-Za-z ]+$/.test(Name.trim())) return "Name must contain letters only";
+    if (!Name || !/^[A-Za-z ]+$/.test(Name.trim())) return "Name must contain letters only";
     if (!studentID.trim()) return "Student ID is required";
     if (!/^07\d{8}$/.test(String(PhoneNumber || "").trim())) return "Invalid Phone Number";
     if (!String(Email || "").toLowerCase().trim().endsWith("@gmail.com")) return "Invalid Email";

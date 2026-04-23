@@ -42,7 +42,7 @@ export default function LiveChatWidget({ pathname = "" }) {
   const listEndRef = useRef(null);
   const openRef = useRef(false);
 
-  const effectiveEmail = user?.Email?.trim().toLowerCase() || (guestOk ? guestEmail.trim().toLowerCase() : "");
+  const effectiveEmail = (user?.Email?.trim().toLowerCase() || (guestOk ? guestEmail.trim().toLowerCase() : "")).replace(/\s+/g, "-");
   const effectiveName = (user?.Name || guestName.trim() || "Student").slice(0, 120);
   const senderRole =
     user?.role === "admin" ? "admin" : guestOk && !user?.Email ? "guest" : "student";
@@ -86,7 +86,9 @@ export default function LiveChatWidget({ pathname = "" }) {
   useEffect(() => {
     if (hideFab || !roomKey) {
       if (socketRef.current) {
-        socketRef.current.emit("leave_chat", { roomKey });
+        if (roomKey && roomKey.trim()) {
+          socketRef.current.emit("leave_chat", { roomKey });
+        }
         socketRef.current.disconnect();
         socketRef.current = null;
       }
@@ -95,7 +97,9 @@ export default function LiveChatWidget({ pathname = "" }) {
     const s = io(SOCKET_ORIGIN, { transports: ["websocket", "polling"] });
     socketRef.current = s;
     s.on("connect", () => {
-      s.emit("join_chat", { roomKey, role: "student" });
+      if (roomKey && roomKey.trim()) {
+        s.emit("join_chat", { roomKey, role: "student" });
+      }
     });
     s.on("chat_message", (msg) => {
       if (normalizeRoomKey(msg.roomKey || "") !== roomKey) return;
@@ -105,7 +109,9 @@ export default function LiveChatWidget({ pathname = "" }) {
       }
     });
     return () => {
-      s.emit("leave_chat", { roomKey });
+      if (roomKey && roomKey.trim()) {
+        s.emit("leave_chat", { roomKey });
+      }
       s.disconnect();
       socketRef.current = null;
     };
@@ -129,6 +135,7 @@ export default function LiveChatWidget({ pathname = "" }) {
     const body = text.trim();
     if (!body || !roomKey || !socketRef.current?.connected) {
       if (!socketRef.current?.connected) alert("Connecting… try again in a moment.");
+      else if (!roomKey) alert("Chat not available - please sign in or provide guest details.");
       return;
     }
     const payload = {

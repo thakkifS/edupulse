@@ -29,6 +29,10 @@ export default function AuthPage() {
   };
 
   const postReminder = async (to, type) => {
+    if (!to || typeof to !== 'string') {
+      console.error('Email is undefined or invalid for reminder');
+      return;
+    }
     try {
       await axios.post("/api/auth/reminder", { to, type });
     } catch (error) {
@@ -43,10 +47,10 @@ export default function AuthPage() {
     }
     if (!/^[A-Za-z ]+$/.test(Name)) return "Name must contain letters only";
     if (!/^07\d{8}$/.test(PhoneNumber)) return "Invalid Phone Number";
-    if (!Email.endsWith("@gmail.com")) return "Invalid Email";
+    if (!Email || !Email.endsWith("@gmail.com")) return "Invalid Email";
     const validPrefixes = ["IT", "EN", "BS", "TC", "AR", "LE"];
-    const prefix = studentID.substring(0, 2).toUpperCase();
-    const digits = studentID.substring(2);
+    const prefix = String(studentID || "").substring(0, 2).toUpperCase();
+    const digits = String(studentID || "").substring(2);
     if (studentID.length !== 10 || !validPrefixes.includes(prefix) || !/^\d{8}$/.test(digits)) {
       return "Invalid Student ID";
     }
@@ -66,7 +70,7 @@ export default function AuthPage() {
         signIn.password === "Abc123"
       ) {
         const admin = { Name: "Admin", Email: "admin@gmail.com", role: "admin" };
-        login(admin);
+        login(admin, "admin-token"); // Use a mock token for admin
         await postReminder(admin.Email, "signin");
         window.open("/admin", "_blank");
         alert("Admin Login Successful");
@@ -77,7 +81,8 @@ export default function AuthPage() {
         Email: signIn.email,
         Password: signIn.password,
       });
-      login(res.data?.data);
+      const token = res.data?.token || res.data?.data?.token;
+      login(res.data?.data, token);
       await postReminder(signIn.email, "signin");
       alert("Login Successful");
       router.push("/");
