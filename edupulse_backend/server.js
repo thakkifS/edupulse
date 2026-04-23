@@ -23,6 +23,13 @@ const resumeRoutes = require("./routes/resumeRoutes");
 const jobRoutes = require("./routes/jobRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
+// New feature routes
+const assignmentRoutes = require("./routes/assignmentRoutes");
+const eventRoutes = require("./routes/eventRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
+const moduleRoutes = require("./routes/moduleRoutes");
+const quizRoutes = require("./routes/quizRoutes");
+
 const validateJSON = require("./middlewares/validateJSON");
 const errorHandler = require("./middlewares/errorHandler");
 
@@ -58,6 +65,13 @@ app.use("/api/careers", careerRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/admin", adminRoutes);
+
+// New feature routes
+app.use("/api/assignments", assignmentRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/feedbacks", feedbackRoutes);
+app.use("/api/modules", moduleRoutes);
+app.use("/api/quizzes", quizRoutes);
 
 // ── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
