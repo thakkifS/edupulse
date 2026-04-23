@@ -605,7 +605,8 @@ export default function CVBuilder() {
                                 alert('Cannot edit CV: Missing ID');
                                 return;
                               }
-                              router.push(`/student/cv-builder/create/${cv.templateId?.name || 'classic'}?id=${cv._id}`);
+                              const templateName = cv.templateId?.name || 'classic';
+                              router.push(`/student/cv-builder/create/${templateName}?id=${cv._id}`);
                             }}
                             className="w-full bg-blue-100 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors font-medium"
                           >
@@ -957,7 +958,8 @@ export default function CVBuilder() {
                                 alert('Cannot edit CV: Missing ID');
                                 return;
                               }
-                              router.push(`/student/cv-builder/create/${cv.templateId?.name || 'classic'}?id=${cv._id}`);
+                              const templateName = cv.templateId?.name || 'classic';
+                              router.push(`/student/cv-builder/create/${templateName}?id=${cv._id}`);
                             }}
                             className="w-full bg-blue-100 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors font-medium"
                           >
